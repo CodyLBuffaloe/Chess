@@ -1,16 +1,35 @@
 require_relative "Cell"
 module Chess
-  #There is a point system to use to evaluate the worth of pieces, maybe use that for tracking pieces moving on the board?
   class Board
-     #Will be an 8x8 board of alternating black and white squares
-     #Can we do black and white?
-     #Use the same board builder as all the others only w/unicode characters in place of the typical "_"
-     #How will I assign each square a specific nomiker like A7 or G5? That's how people will be moving, right?
-     #White corner in the right hand side closest to each player
-     #White Queen on white square, black on black
     attr_accessor :board
     def initialize(input = {})
       @board = input.fetch(:board, default_board)
+    end
+    def starting_positions
+      (0...8).each do |p|
+        @board[1][p].value = Piece.new(:white, :pawn).figure
+        @board[6][p].value = Piece.new(:black, :pawn).figure
+      end
+      @board[0][4].value = Piece.new(:white, :king).figure
+      @board[7][4].value = Piece.new(:black, :king).figure
+
+      @board[0][3].value = Piece.new(:white, :queen).figure
+      @board[7][3].value = Piece.new(:black, :queen).figure
+
+      @board[0][2].value = Piece.new(:white, :bishop).figure
+      @board[0][5].value = Piece.new(:white, :bishop).figure
+      @board[7][2].value = Piece.new(:black, :bishop).figure
+      @board[7][5].value = Piece.new(:black, :bishop).figure
+
+      @board[0][1].value = Piece.new(:white, :knight).figure
+      @board[0][6].value = Piece.new(:white, :knight).figure
+      @board[7][1].value = Piece.new(:black, :knight).figure
+      @board[7][6].value = Piece.new(:black, :knight).figure
+
+      @board[0][0].value = Piece.new(:white, :rook).figure
+      @board[0][7].value = Piece.new(:white, :rook).figure
+      @board[7][0].value = Piece.new(:black, :rook).figure
+      @board[7][7].value = Piece.new(:black, :rook).figure
     end
     def display_formatted_board
       @board.each do |rank|
@@ -23,35 +42,46 @@ module Chess
   end
    #Rank: horizontal line
     #File: vertical line
-  class Piece
-
-     #Will I need different classes for each piece?
-     #Each piece should know what it is, so I will need a class for each type of piece so they only know how to move themselves?
-     #That way, only pawns know how to move like pawns, and knights like knights?
-     #I guess this class should only be for defining the pieces though
-
-    #A Piece
-    # - Has a type
-    # - How to convey type: a point value system like in real chess? I.E. Queen = 9 Pawn = 1
-    #Starting Values:
-    #Pawn = 1 (x8)
-    #Knight = 3 (x2)
-    #Bishop = 3 (x2)
-    #Rook = 5 (x2)
-    #Queen = 9
-    # - Has a name
-    # - Has a set of distinct moves shared between all the piece of that type
-    # - Has an original place on the board, based on it's type and, in case of the queen, color.
-    def initialize(player, status = :active)
-      if player.color == :white
-        white = { :king => "\u{2654}", :queen => "\u{2655}", :night => "\u{2658}", :bishop => "\u{2657}", :rook => "\u{2656}", :pawn => "\u{2659}" }
-        white.each_value do |value|
-          puts value
+  class Piece #Stores the Unicode values of the pieces
+  attr_accessor :figure
+    def initialize (color, piece)
+      if color == :black
+        if piece == :pawn
+          @figure = "\u{265F}".encode('utf-8')
         end
-      else
-        black = { :king => "\u{265A}", :queen => "\u{265B}", :night => "\u{265E}", :rook => "\u{265C}", :bishop => "\u{265D}", :pawn => "\u{265F}" }
-        black.each_value do |value|
-          puts value
+        if piece == :king
+          @figure == "\u{265A}".encode('utf-8')
+        end
+        if piece == :queen
+          @figure = "\u{265B}".encode('utf-8')
+        end
+        if piece == :knight
+          @figure = "\u{265E}".encode('utf-8')
+        end
+        if piece == :bishop
+          @figure = "\u{265D}".encode('utf-8')
+        end
+        if piece == :rook
+          @figure = "\u{265C}".encode('utf-8')
+        end
+      elsif color == :white
+        if piece == :pawn
+          @figure = "\u{2659}".encode('utf-8')
+        end
+        if piece == :king
+          @figure = "\u{2654}".encode('utf-8')
+        end
+        if piece == :queen
+          @figure = "\u{2654}".encode('utf-8')
+        end
+        if piece == :knight
+          @figure = "\u{2658}".encode('utf-8')
+        end
+        if piece == :bishop
+          @figure = "\u{2657}".encode('utf-8')
+        end
+        if piece == :rook
+          @figure = "\u{2656}".encode('utf-8')
         end
       end
     end
@@ -112,13 +142,9 @@ module Chess
       @p2 = players[1]
       @board = Board.new()
     end
-    def display_piece
-      Piece.new(p2)
-    end
     def play
+      board.starting_positions
       board.display_formatted_board
-      display_piece()
-
     end
   end
        #This is where the game logic will be, how it starts and how it ends.
@@ -128,7 +154,7 @@ module Chess
        #Resignation option? Don't want people to be forced to play in a hopeless position
 
   class Player
-    attr_accessor :name, :color
+    attr_accessor :name, :color, :piece_set
     def initialize(name, color)
       @name = name
       @color = color
